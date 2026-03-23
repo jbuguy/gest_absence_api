@@ -1,13 +1,20 @@
 <?php
-$host = "localhost";
-$db_name = "gest_absence";
-$username = "pmauser";
-$password = "yourpassword";
+class Database {
+    private $host = "localhost";
+    private $db_name = "gest_absence";
+    private $username = "root";
+    private $password = "";
+    public $conn;
 
-$conn = mysqli_connect($host, $username, $password, $db_name);
-
-// Check connection
-if (!$conn) {
-  die("Connection failed: " . mysqli_connect_error());
+    public function getConnection() {
+        $this->conn = null;
+        try {
+            $this->conn = new PDO("mysql:host=" . $this->host . ";dbname=" . $this->db_name, $this->username, $this->password);
+            $this->conn->exec("set names utf8");
+        } catch(PDOException $exception) {
+            echo "Erreur de connexion : " . $exception->getMessage();
+        }
+        return $this->conn;
+    }
 }
-echo "Connected successfully";
+?>
