@@ -3,37 +3,34 @@ header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: POST");
 
-include_once '../config/database.php'; // Assure-toi que ce fichier existe
+include_once '../config/database.php';
+$db = getConnection();
 
-// Connexion à la base (à adapter selon ton fichier database.php)
-$database = new Database();
-$db = $database->getConnection();
+function login($db, $data)
+{
+    if (empty($data->email) || empty($data->password)) {
+        echo json_encode(["success" => 0, "message" => "Données incomplètes."]);
+        return;
+    }
 
-// Récupérer les données envoyées en POST
-$data = json_decode(file_get_contents("php://input"));
-
-if(!empty($data->email) && !empty($data->password)){
-    
     $query = "SELECT id, nom, prenom, role FROM utilisateurs 
-              WHERE email = :email AND password = :password LIMIT 0,1";
-    
-    $stmt = $db->prepare($query);
-    $stmt->bindParam(":email", $data->email);
-    $stmt->bindParam(":password", $data->password);
-    $stmt->execute();
+              WHERE email = ? AND password = ? LIMIT 1";
 
-    if($stmt->rowCount() > 0){
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        // Succès : on renvoie les infos de l'utilisateur 
+    $stmt = $db->prepare($query);
+    $stmt->bind_param('ss', $data->email, $data->password);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result && $result->num_rows > 0) {
+        $row = $result->fetch_assoc();
         echo json_encode([
             "success" => 1,
             "user" => $row
         ]);
     } else {
-        // Échec : identifiants incorrects [cite: 168]
         echo json_encode(["success" => 0, "message" => "Email ou mot de passe incorrect."]);
     }
-} else {
-    echo json_encode(["success" => 0, "message" => "Données incomplètes."]);
 }
-?>
+
+$data = json_decode(file_get_contents("php://input"));
+login($db, $data);

@@ -1,20 +1,20 @@
 <?php
-class Database {
-    private $host = "localhost";
-    private $db_name = "gest_absence";
-    private $username = "root";
-    private $password = "";
-    public $conn;
 
-    public function getConnection() {
-        $this->conn = null;
-        try {
-            $this->conn = new PDO("mysql:host=" . $this->host . ";dbname=" . $this->db_name, $this->username, $this->password);
-            $this->conn->exec("set names utf8");
-        } catch(PDOException $exception) {
-            echo "Erreur de connexion : " . $exception->getMessage();
-        }
-        return $this->conn;
-    }
+function getConnection()
+{
+  $host = "localhost";
+  $db_name = "gest_absence";
+  $username = "root";
+  $password = "";
+
+  $conn = new mysqli($host, $username, $password, $db_name);
+  if ($conn->connect_error) {
+    http_response_code(500);
+    echo json_encode(["success" => 0, "message" => "Erreur de connexion : $conn->connect_error"]);
+    exit;
+  }
+
+  $conn->set_charset("utf8");
+  return $conn;
 }
-?>
+

@@ -3,25 +3,40 @@ header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 include_once '../config/database.php';
 
-$database = new Database();
-$db = $database->getConnection();
-$method = $_SERVER['REQUEST_METHOD'];
+$db = getConnection();
+$data = json_decode(file_get_contents("php://input"));
 
-switch($method) {
-    case 'GET':
-        $query = "SELECT * FROM classes";
-        $stmt = $db->prepare($query);
-        $stmt->execute();
-        echo json_encode(["success" => 1, "data" => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
-        break;
+function getClasses($db)
+{
+  $query = "SELECT * FROM classes";
+  $result = $db->query($query);
+  $classes = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+  echo json_encode(["success" => 1, "data" => $classes]);
+}
 
-    case 'POST':
-        $data = json_decode(file_get_contents("php://input"));
-        if(!empty($data->nom) && !empty($data->niveau)) {
-            $query = "INSERT INTO classes (nom, niveau) VALUES (:nom, :niveau)";
-            $stmt = $db->prepare($query);
-            $stmt->execute([':nom' => $data->nom, ':niveau' => $data->niveau]);
-            echo json_encode(["success" => 1, "message" => "Classe créée"]);
-        }
-        break;
+function createClasse($db, $data)
+{
+  if (empty($data->nom) || empty($data->niveau)) {
+    echo json_encode(["success" => 0, "message" => "Données incomplètes"]);
+    return;
+  }
+
+  $query = "INSERT INTO classes (nom, niveau) VALUES (?, ?)";
+  $stmt = $db->prepare($query);
+  $stmt->bind_param('ss', $data->nom, $data->niveau);
+
+  if ($stmt->execute()) {
+    echo json_encode(["success" => 1, "message" => "Classe créée"]);
+  } else {
+    echo json_encode(["success" => 0, "message" => "Erreur SQL : " . $stmt->error]);
+  }
+}
+
+switch ($_SERVER['REQUEST_METHOD']) {
+  case 'GET':
+    getClasses($db);
+    break;
+  case 'POST':
+    createClasse($db, $data);
+    break;
 }
