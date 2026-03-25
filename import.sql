@@ -1,6 +1,3 @@
-CREATE DATABASE IF NOT EXISTS gest_absence
-CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE gest_absence;
 -- Table des utilisateurs (commun aux 3 rôles)
 CREATE TABLE utilisateurs (
 id INT AUTO_INCREMENT PRIMARY KEY,
