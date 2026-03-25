@@ -4,8 +4,8 @@ function getConnection()
 {
   $host = "localhost";
   $db_name = "gest_absence";
-  $username = "root";
-  $password = "";
+  $username = "pmauser";
+  $password = "yourpassword";
 
   $conn = new mysqli($host, $username, $password, $db_name);
   if ($conn->connect_error) {
@@ -17,4 +17,3 @@ function getConnection()
   $conn->set_charset("utf8");
   return $conn;
 }
-
