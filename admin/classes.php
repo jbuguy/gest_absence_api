@@ -11,6 +11,10 @@ function getClasses($db)
   $query = "SELECT * FROM classes";
   $result = $db->query($query);
   $classes = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+  $classes = array_map(function ($row) {
+    $row["id"] = (int) $row["id"];
+    return $row;
+  }, $classes);
   echo json_encode(["success" => 1, "data" => $classes]);
 }
 

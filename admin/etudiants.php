@@ -16,6 +16,11 @@ function getEtudiants($db)
               JOIN classes c ON e.classe_id = c.id";
   $result = $db->query($query);
   $etudiants = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+  $etudiants = array_map(function ($row) {
+    $row['user_id'] = (int) $row['user_id'];
+    $row['etudiant_id'] = (int) $row['etudiant_id'];
+    return $row;
+  }, $etudiants);
   echo json_encode(["success" => 1, "data" => $etudiants]);
 }
 

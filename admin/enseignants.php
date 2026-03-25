@@ -10,11 +10,15 @@ $data = json_decode(file_get_contents("php://input"));
 
 function getEnseignants($db)
 {
-    $query = "SELECT u.id as utilisateur_id, ens.id as enseignant_id, u.nom, u.prenom, u.email, ens.specialite 
+    $query = "SELECT u.id as user_id, ens.id as enseignant_id, u.nom, u.prenom, u.email, ens.specialite 
               FROM enseignants ens 
               JOIN utilisateurs u ON ens.utilisateur_id = u.id";
     $result = $db->query($query);
     $enseignants = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    $enseignants = array_map(function ($row) {
+        $row['user_id'] = (int) $row['user_id'];
+        return $row;
+    }, $enseignants);
     echo json_encode(["success" => 1, "data" => $enseignants]);
 }
 
