@@ -44,3 +44,4 @@ switch ($_SERVER['REQUEST_METHOD']) {
     createClasse($db, $data);
     break;
 }
+

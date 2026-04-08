@@ -7,12 +7,12 @@ $db = getConnection();
 
 function getEnseignantSeances($db)
 {
-    if (!isset($_GET['utilisateur_id'])) {
+    if (!isset($_GET['id'])) {
         echo json_encode(["success" => 0, "message" => "utilisateur_id manquant"]);
         return;
     }
 
-    $u_id = intval($_GET['utilisateur_id']);
+    $u_id = intval($_GET['id']);
     $query = "SELECT s.*, c.nom as classe_nom, m.nom as matiere_nom 
               FROM seances s
               JOIN enseignants e ON s.enseignant_id = e.id

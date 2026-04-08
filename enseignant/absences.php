@@ -31,20 +31,45 @@ function getAbsenceStudents($db)
 
 function createAbsence($db, $data)
 {
-    if (empty($data->etudiant_id) || empty($data->seance_id) || !isset($data->statut)) {
-        echo json_encode(["success" => 0, "message" => "Données incomplètes (besoin de etudiant_id, seance_id et statut)"]);
+    if (empty($data->seance_id) || empty($data->absences) || !is_array($data->absences)) {
+        echo json_encode(["success" => 0, "message" => "Données incomplètes (besoin de seance_id et d'une liste d'absences)"]);
         return;
     }
 
+    $seance_id = $data->seance_id;
     $query = "INSERT INTO absences (etudiant_id, seance_id, statut) VALUES (?, ?, ?)";
     $stmt = $db->prepare($query);
-    $stmt->bind_param('iis', $data->etudiant_id, $data->seance_id, $data->statut);
 
-    if ($stmt->execute()) {
-        echo json_encode(["success" => 1, "message" => "Absence enregistrée dans la base"]);
-    } else {
-        echo json_encode(["success" => 0, "message" => "Erreur SQL : " . $stmt->error]);
+    $successCount = 0;
+    $errorCount = 0;
+    $errors = [];
+
+    foreach ($data->absences as $absence) {
+        if (empty($absence->etudiant_id) || !isset($absence->statut)) {
+            $errorCount++;
+            $errors[] = "Données manquantes pour un étudiant";
+            continue;
+        }
+
+        $etudiant_id = $absence->etudiant_id;
+        $statut = $absence->statut;
+        $stmt->bind_param('iis', $etudiant_id, $seance_id, $statut);
+
+        if ($stmt->execute()) {
+            $successCount++;
+        } else {
+            $errorCount++;
+            $errors[] = "Erreur pour l'étudiant {$etudiant_id}: " . $stmt->error;
+        }
     }
+
+    echo json_encode([
+        "success" => ($errorCount === 0) ? 1 : 0,
+        "message" => "Absences enregistrées: {$successCount} réussies, {$errorCount} échouées",
+        "successCount" => $successCount,
+        "errorCount" => $errorCount,
+        "errors" => $errors
+    ]);
 }
 
 switch ($_SERVER['REQUEST_METHOD']) {
@@ -55,4 +80,3 @@ switch ($_SERVER['REQUEST_METHOD']) {
         createAbsence($db, $data);
         break;
 }
-?>
