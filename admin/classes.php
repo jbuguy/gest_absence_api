@@ -35,6 +35,23 @@ function createClasse($db, $data)
     echo json_encode(["success" => 0, "message" => "Erreur SQL : " . $stmt->error]);
   }
 }
+function updateClasse($db, $data)
+{
+  if (empty($data->id) || empty($data->nom) || empty($data->niveau)) {
+    echo json_encode(["success" => 0, "message" => "Données incomplètes"]);
+    return;
+  }
+
+  $query = "UPDATE classes SET nom = ?, niveau = ? WHERE id = ?";
+  $stmt = $db->prepare($query);
+  $stmt->bind_param('ssi', $data->nom, $data->niveau, $data->id);
+
+  if ($stmt->execute()) {
+    echo json_encode(["success" => 1, "message" => "Classe mise à jour"]);
+  } else {
+    echo json_encode(["success" => 0, "message" => "Erreur SQL : " . $stmt->error]);
+  }
+}
 
 switch ($_SERVER['REQUEST_METHOD']) {
   case 'GET':
