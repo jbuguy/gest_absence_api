@@ -43,5 +43,8 @@ switch ($_SERVER['REQUEST_METHOD']) {
   case 'POST':
     createClasse($db, $data);
     break;
+  case "PUT":
+    updateClasse($db, $data);
+    break;
 }
 

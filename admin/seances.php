@@ -16,6 +16,10 @@ function getSeances($db)
               JOIN matieres m ON s.matiere_id = m.id";
     $result = $db->query($query);
     $seances = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    $seances = array_map(function ($row) {
+        $row['id'] = (int) $row['id'];
+        return $row;
+    }, $seances);
     echo json_encode(["success" => 1, "data" => $seances]);
 }
 

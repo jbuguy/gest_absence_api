@@ -29,14 +29,33 @@ function getAbsenceStudents($db)
     echo json_encode(["success" => 1, "data" => $students]);
 }
 
+
+
+function resolveEtudiantId($db, $id)
+{
+    $etudiantId = intval($id);
+    if ($etudiantId <= 0) {
+        return null;
+    }
+
+    $query = "SELECT id FROM etudiants WHERE id = ? OR utilisateur_id = ? LIMIT 1";
+    $stmt = $db->prepare($query);
+    $stmt->bind_param('ii', $etudiantId, $etudiantId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result ? $result->fetch_assoc() : null;
+
+    return $row ? intval($row['id']) : null;
+}
+
 function createAbsence($db, $data)
 {
-    if (empty($data->seance_id) || empty($data->absences) || !is_array($data->absences)) {
-        echo json_encode(["success" => 0, "message" => "Données incomplètes (besoin de seance_id et d'une liste d'absences)"]);
+    if (empty($data->seance_id) || empty($data->absences) || !(is_array($data->absences) || is_object($data->absences))) {
+        echo json_encode(["success" => 0, "message" => "Données incomplètes (besoin de seance_id et d'absences sous forme de tableau ou de map)"]);
         return;
     }
 
-    $seance_id = $data->seance_id;
+    $seance_id = intval($data->seance_id);
     $query = "INSERT INTO absences (etudiant_id, seance_id, statut) VALUES (?, ?, ?)";
     $stmt = $db->prepare($query);
 
@@ -44,15 +63,23 @@ function createAbsence($db, $data)
     $errorCount = 0;
     $errors = [];
 
-    foreach ($data->absences as $absence) {
-        if (empty($absence->etudiant_id) || !isset($absence->statut)) {
+    if (is_object($data->absences)) {
+        $absences = (array) $data->absences;
+    } else {
+        $absences = $data->absences;
+    }
+
+    foreach ($absences as $key => $value) {
+        $submittedId = intval($key);
+        $etudiant_id = resolveEtudiantId($db, $submittedId);
+        $statut = $value ? 'present' : 'absent';
+
+        if ($etudiant_id === null) {
             $errorCount++;
-            $errors[] = "Données manquantes pour un étudiant";
+            $errors[] = "Identifiant d'étudiant invalide ou introuvable: {$key}";
             continue;
         }
 
-        $etudiant_id = $absence->etudiant_id;
-        $statut = $absence->statut;
         $stmt->bind_param('iis', $etudiant_id, $seance_id, $statut);
 
         if ($stmt->execute()) {

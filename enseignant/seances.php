@@ -25,9 +25,12 @@ function getEnseignantSeances($db)
     $stmt->execute();
     $result = $stmt->get_result();
     $seances = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    $seances = array_map(function ($row) {
+        $row['id'] = (int) $row['id'];
+        return $row;
+    }, $seances);
 
     echo json_encode(["success" => 1, "data" => $seances]);
 }
 
 getEnseignantSeances($db);
-?>
