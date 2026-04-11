@@ -27,6 +27,8 @@ function getEnseignantSeances($db)
     $seances = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     $seances = array_map(function ($row) {
         $row['id'] = (int) $row['id'];
+        $row["classe_id"] = (int) $row["classe_id"];
+        $row["matiere_id"] = (int) $row["matiere_id"];
         return $row;
     }, $seances);
 
