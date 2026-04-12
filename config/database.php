@@ -1,19 +1,21 @@
 <?php
+function getConnection() {
+    $host = "localhost";
+    $db_name = "gest_absence"; // Vérifie que c'est bien le nom de ta base dans phpMyAdmin
+    $username = "root";        // Change 'pmauser' par 'root'
+    $password = "";            // Laisse vide (souvent vide par défaut sur XAMPP)
 
-function getConnection()
-{
-  $host = "localhost";
-  $db_name = "gest_absence";
-  $username = "pmauser";
-  $password = "yourpassword";
-
-  $conn = new mysqli($host, $username, $password, $db_name);
-  if ($conn->connect_error) {
-    http_response_code(500);
-    echo json_encode(["success" => 0, "message" => "Erreur de connexion : $conn->connect_error"]);
-    exit;
-  }
-
-  $conn->set_charset("utf8");
-  return $conn;
+    try {
+        $conn = new mysqli($host, $username, $password, $db_name);
+        
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+        
+        return $conn;
+    } catch (Exception $exception) {
+        echo "Error: " . $exception->getMessage();
+        return null;
+    }
 }
+?>

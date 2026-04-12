@@ -4,6 +4,12 @@ header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: GET, POST, PUT, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
+// Gestion du protocole OPTIONS (Pre-flight request pour Flutter)
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
 include_once '../config/database.php';
 $db = getConnection();
 $data = json_decode(file_get_contents("php://input"));
@@ -55,7 +61,8 @@ function createEnseignant($db, $data)
 
 function updateEnseignant($db, $data)
 {
-    if (empty($data->utilisateur_id) || empty($data->nom) || empty($data->prenom) || empty($data->matiere_id)) {
+    // Correction : On vérifie 'specialite' au lieu de 'matiere_id'
+    if (empty($data->utilisateur_id) || empty($data->nom) || empty($data->prenom) || empty($data->specialite)) {
         echo json_encode(["success" => 0, "message" => "Données incomplètes pour mise à jour"]);
         return;
     }
@@ -63,21 +70,23 @@ function updateEnseignant($db, $data)
     try {
         $db->begin_transaction();
 
+        // 1. Mise à jour de la table utilisateurs
         $qUser = "UPDATE utilisateurs SET nom = ?, prenom = ? WHERE id = ?";
         $stUser = $db->prepare($qUser);
         $stUser->bind_param('ssi', $data->nom, $data->prenom, $data->utilisateur_id);
         $stUser->execute();
 
-        $qEns = "UPDATE enseignants SET matiere_id = ? WHERE utilisateur_id = ?";
+        // 2. Mise à jour de la table enseignants (Correction du nom de la colonne)
+        $qEns = "UPDATE enseignants SET specialite = ? WHERE utilisateur_id = ?";
         $stEns = $db->prepare($qEns);
-        $stEns->bind_param('ii', $data->matiere_id, $data->utilisateur_id);
+        $stEns->bind_param('si', $data->specialite, $data->utilisateur_id);
         $stEns->execute();
 
         $db->commit();
-        echo json_encode(["success" => 1, "message" => "Enseignant mis à jour"]);
+        echo json_encode(["success" => 1, "message" => "Enseignant mis à jour avec succès"]);
     } catch (Exception $e) {
         $db->rollback();
-        echo json_encode(["success" => 0, "message" => "Erreur : " . $e->getMessage()]);
+        echo json_encode(["success" => 0, "message" => "Erreur SQL : " . $e->getMessage()]);
     }
 }
 
