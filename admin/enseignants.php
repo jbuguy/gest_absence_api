@@ -81,6 +81,34 @@ function updateEnseignant($db, $data)
     }
 }
 
+function deleteEnseignant($db, $data)
+{
+    if (empty($data->utilisateur_id)) {
+        echo json_encode(["success" => 0, "message" => "ID utilisateur d'enseignant manquant"]);
+        return;
+    }
+
+    try {
+        $db->begin_transaction();
+
+        $qEns = "DELETE FROM enseignants WHERE utilisateur_id = ?";
+        $stEns = $db->prepare($qEns);
+        $stEns->bind_param('i', $data->utilisateur_id);
+        $stEns->execute();
+
+        $qUser = "DELETE FROM utilisateurs WHERE id = ?";
+        $stUser = $db->prepare($qUser);
+        $stUser->bind_param('i', $data->utilisateur_id);
+        $stUser->execute();
+
+        $db->commit();
+        echo json_encode(["success" => 1, "message" => "Enseignant supprimé"]);
+    } catch (Exception $e) {
+        $db->rollback();
+        echo json_encode(["success" => 0, "message" => "Erreur : " . $e->getMessage()]);
+    }
+}
+
 switch ($_SERVER['REQUEST_METHOD']) {
     case 'GET':
         getEnseignants($db);
@@ -90,5 +118,8 @@ switch ($_SERVER['REQUEST_METHOD']) {
         break;
     case 'PUT':
         updateEnseignant($db, $data);
+        break;
+    case 'DELETE':
+        deleteEnseignant($db, $data);
         break;
 }

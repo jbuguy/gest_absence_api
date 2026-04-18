@@ -62,6 +62,24 @@ function updateSeance($db, $data)
     }
 }
 
+function deleteSeance($db, $data)
+{
+    if (empty($data->id)) {
+        echo json_encode(["success" => 0, "message" => "ID de séance manquant"]);
+        return;
+    }
+
+    $query = "DELETE FROM seances WHERE id = ?";
+    $stmt = $db->prepare($query);
+    $stmt->bind_param('i', $data->id);
+
+    if ($stmt->execute()) {
+        echo json_encode(["success" => 1, "message" => "Séance supprimée"]);
+    } else {
+        echo json_encode(["success" => 0, "message" => "Erreur SQL : $stmt->error"]);
+    }
+}
+
 switch ($_SERVER['REQUEST_METHOD']) {
     case 'GET':
         getSeances($db);
@@ -71,5 +89,8 @@ switch ($_SERVER['REQUEST_METHOD']) {
         break;
     case 'PUT':
         updateSeance($db, $data);
+        break;
+    case 'DELETE':
+        deleteSeance($db, $data);
         break;
 }

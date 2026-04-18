@@ -53,6 +53,24 @@ function updateClasse($db, $data)
   }
 }
 
+function deleteClasse($db, $data)
+{
+  if (empty($data->id)) {
+    echo json_encode(["success" => 0, "message" => "ID de classe manquant"]);
+    return;
+  }
+
+  $query = "DELETE FROM classes WHERE id = ?";
+  $stmt = $db->prepare($query);
+  $stmt->bind_param('i', $data->id);
+
+  if ($stmt->execute()) {
+    echo json_encode(["success" => 1, "message" => "Classe supprimée"]);
+  } else {
+    echo json_encode(["success" => 0, "message" => "Erreur SQL : " . $stmt->error]);
+  }
+}
+
 switch ($_SERVER['REQUEST_METHOD']) {
   case 'GET':
     getClasses($db);
@@ -62,6 +80,9 @@ switch ($_SERVER['REQUEST_METHOD']) {
     break;
   case "PUT":
     updateClasse($db, $data);
+    break;
+  case "DELETE":
+    deleteClasse($db, $data);
     break;
 }
 
