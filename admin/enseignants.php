@@ -1,7 +1,7 @@
 <?php
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Methods: GET, POST, PUT, OPTIONS");
+header("Access-Control-Allow-Methods: GET, POST, PUT, OPTIONS,DELETE");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
 include_once '../config/database.php';
@@ -83,7 +83,7 @@ function updateEnseignant($db, $data)
 
 function deleteEnseignant($db, $data)
 {
-    if (empty($data->utilisateur_id)) {
+    if (empty($_GET["id"])) {
         echo json_encode(["success" => 0, "message" => "ID utilisateur d'enseignant manquant"]);
         return;
     }
@@ -93,12 +93,12 @@ function deleteEnseignant($db, $data)
 
         $qEns = "DELETE FROM enseignants WHERE utilisateur_id = ?";
         $stEns = $db->prepare($qEns);
-        $stEns->bind_param('i', $data->utilisateur_id);
+        $stEns->bind_param('i', $_GET["id"]);
         $stEns->execute();
 
         $qUser = "DELETE FROM utilisateurs WHERE id = ?";
         $stUser = $db->prepare($qUser);
-        $stUser->bind_param('i', $data->utilisateur_id);
+        $stUser->bind_param('i', $_GET["id"]);
         $stUser->execute();
 
         $db->commit();

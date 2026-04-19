@@ -1,6 +1,8 @@
 <?php
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
+header("Access-Control-Allow-Methods: GET, POST, PUT, OPTIONS,DELETE");
+
 include_once '../config/database.php';
 
 $db = getConnection();
@@ -55,14 +57,28 @@ function updateClasse($db, $data)
 
 function deleteClasse($db, $data)
 {
-  if (empty($data->id)) {
+  if (empty($_GET["id"])) {
     echo json_encode(["success" => 0, "message" => "ID de classe manquant"]);
+    return;
+  }
+
+  $class_id = $_GET["id"];
+
+  $query_check = "SELECT COUNT(*) as count FROM etudiants WHERE classe_id = ?";
+  $stmt_check = $db->prepare($query_check);
+  $stmt_check->bind_param('i', $class_id);
+  $stmt_check->execute();
+  $result = $stmt_check->get_result();
+  $row = $result->fetch_assoc();
+
+  if ($row['count'] > 0) {
+    echo json_encode(["success" => 0, "message" => "Cette classe contient des étudiants. Impossible de la supprimer."]);
     return;
   }
 
   $query = "DELETE FROM classes WHERE id = ?";
   $stmt = $db->prepare($query);
-  $stmt->bind_param('i', $data->id);
+  $stmt->bind_param('i', $class_id);
 
   if ($stmt->execute()) {
     echo json_encode(["success" => 1, "message" => "Classe supprimée"]);

@@ -1,6 +1,8 @@
 <?php
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
+header("Access-Control-Allow-Methods: GET, POST, PUT, OPTIONS,DELETE");
+
 include_once '../config/database.php';
 
 $db = getConnection();
@@ -64,14 +66,14 @@ function updateSeance($db, $data)
 
 function deleteSeance($db, $data)
 {
-    if (empty($data->id)) {
+    if (empty($_GET["id"])) {
         echo json_encode(["success" => 0, "message" => "ID de séance manquant"]);
         return;
     }
 
     $query = "DELETE FROM seances WHERE id = ?";
     $stmt = $db->prepare($query);
-    $stmt->bind_param('i', $data->id);
+    $stmt->bind_param('i', $_GET["id"]);
 
     if ($stmt->execute()) {
         echo json_encode(["success" => 1, "message" => "Séance supprimée"]);
