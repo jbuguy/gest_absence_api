@@ -56,8 +56,6 @@ function createAbsence($db, $data)
     }
 
     $seance_id = intval($data->seance_id);
-    $query = "INSERT INTO absences (etudiant_id, seance_id, statut) VALUES (?, ?, ?)";
-    $stmt = $db->prepare($query);
 
     $successCount = 0;
     $errorCount = 0;
@@ -80,13 +78,38 @@ function createAbsence($db, $data)
             continue;
         }
 
-        $stmt->bind_param('iis', $etudiant_id, $seance_id, $statut);
+        // Check if absence already exists
+        $checkQuery = "SELECT id FROM absences WHERE etudiant_id = ? AND seance_id = ? LIMIT 1";
+        $checkStmt = $db->prepare($checkQuery);
+        $checkStmt->bind_param('ii', $etudiant_id, $seance_id);
+        $checkStmt->execute();
+        $result = $checkStmt->get_result();
+        $existingAbsence = $result->fetch_assoc();
 
-        if ($stmt->execute()) {
-            $successCount++;
+        if ($existingAbsence) {
+            // Update existing absence record
+            $updateQuery = "UPDATE absences SET statut = ? WHERE etudiant_id = ? AND seance_id = ?";
+            $updateStmt = $db->prepare($updateQuery);
+            $updateStmt->bind_param('sii', $statut, $etudiant_id, $seance_id);
+
+            if ($updateStmt->execute()) {
+                $successCount++;
+            } else {
+                $errorCount++;
+                $errors[] = "Erreur pour l'étudiant {$etudiant_id}: " . $updateStmt->error;
+            }
         } else {
-            $errorCount++;
-            $errors[] = "Erreur pour l'étudiant {$etudiant_id}: " . $stmt->error;
+            // Insert new absence record
+            $insertQuery = "INSERT INTO absences (etudiant_id, seance_id, statut) VALUES (?, ?, ?)";
+            $insertStmt = $db->prepare($insertQuery);
+            $insertStmt->bind_param('iis', $etudiant_id, $seance_id, $statut);
+
+            if ($insertStmt->execute()) {
+                $successCount++;
+            } else {
+                $errorCount++;
+                $errors[] = "Erreur pour l'étudiant {$etudiant_id}: " . $insertStmt->error;
+            }
         }
     }
 
